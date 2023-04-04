@@ -7,12 +7,12 @@ class SpreadingRumorsGUI(tk.Tk):
     The class inherits from tk.TK class. It will provide us method to generate interface for the user and visualize
     the spreading rumor model.
     """
-    def __init__(self, grid, rumor_spreaders, L, cell_size=10):
+    def __init__(self, grid, banned_rumor_spreaders, L, cell_size=10):
         # Calling the parent constructor to generate the main windows for display.
         super().__init__()
         # Initialized the parameters:
         self.board = grid
-        self.rumor_spreaders = rumor_spreaders
+        self.banned_rumor_spreaders = banned_rumor_spreaders
         self.L = L
         self.cell_size = cell_size
         # Method from tkinter package, will generate the grid.
@@ -50,8 +50,8 @@ class SpreadingRumorsGUI(tk.Tk):
                 self.canvas.create_rectangle(left, top, right, bottom, fill=color)
 
         # Calling the method spread_rumor to update the board and
-        # the banned matrix cells who are not allow to spread rumor.
-        self.board, self.rumor_spreaders = spread_rumor(self.board, self.L, self.rumor_spreaders)
+        # the rumor_spreaders (cells who are not allow to spread rumor for L generation).
+        self.board, self.banned_rumor_spreaders = spread_rumor(self.board, self.L, self.banned_rumor_spreaders)
         # Method from tkinter package, updating the canvas after 100 milliseconds. This way we make more
         # responsive and understandable visualization when passing generations.
         self.after(100, self.update_canvas)
