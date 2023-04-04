@@ -151,6 +151,8 @@ def spread_rumor(board, L, banned_rumor_spreaders):
     return new_board, banned_rumor_spreaders
 
 
+
+
 def run_spreading_rumors(iterations, size=(100, 100), s1_ratio=0.25, s2_ratio=0.25, s3_ratio=0.25, L=5):
     board = initialize_board(size, s1_ratio, s2_ratio, s3_ratio)
     rumor_spreaders = np.zeros(size, dtype=np.uint8)
