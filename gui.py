@@ -1,6 +1,7 @@
 import tkinter as tk
 from main import initialize_board, spread_rumor
 import numpy as np
+from tkinter import simpledialog
 
 class SpreadingRumorsGUI(tk.Tk):
     """
@@ -26,17 +27,17 @@ class SpreadingRumorsGUI(tk.Tk):
         self.canvas.pack()
         # will keep the visualize updating in each generation.
         #self.update_canvas()
-
+        print("self.advance_button = tk.Button ")
         self.advance_button = tk.Button(self, text="Advance one generation", command=self.advance_one_generation)
         self.advance_button.pack()
-
+        print("self.draw_board()")
         self.draw_board()
 
     def draw_board(self):
         colors = {-1: "white", 0: "black", 1: "blue", 2: "green", 3: "yellow", 4: "red", 5: "pink"}
 
         self.canvas.delete("all")
-
+        print("After we did - > self.canvas.delete(all)")
         for row in range(self.board.shape[0]):
             for col in range(self.board.shape[1]):
                 color = colors[self.board[row, col]]
@@ -48,11 +49,12 @@ class SpreadingRumorsGUI(tk.Tk):
                 self.canvas.create_rectangle(left, top, right, bottom, fill=color)
 
     def advance_one_generation(self):
+        print("advance_one_generation")
         self.board, self.banned_rumor_spreaders, self.rumor_received, self.flags_board = spread_rumor(
             self.board, self.banned_rumor_spreaders, self.L, self.original_doubt_lvl_spreaders, self.rumor_received,
             self.flags_board
         )
-
+        print("self.draw_board()")
         self.draw_board()
     """
     def update_canvas(self):
@@ -101,6 +103,7 @@ if __name__ == "__main__":
     s3_ratio = 0.25
     L = 10
     P = 0.7
+    print("parameters")
     # Initialized the board with the parameters.
     board = initialize_board(size, P, s1_ratio, s2_ratio, s3_ratio)
     # Initialized zeros matrix in the size of the board. When we select the random cell to start the rumor we will
@@ -113,18 +116,32 @@ if __name__ == "__main__":
     # Create a new board with boolean flags, initialized with False values.
     # This matrix will flag to us if a cell is active and can spread rumor.
     flags_board = np.full(size, False, dtype=bool)
-    # Randomly select a person to start spreading the rumor
-    start_row, start_col = np.random.randint(0, size[0]), np.random.randint(0, size[1])
+    # Randomly select a person to start spreading the rumor. In order to make sure we select a random person
+    # meaning we need to make sure we select populate cell. we will keep try to randomly select
+    # cells until the cell is != -1 (unpopulated cell)
+    while True:
+        start_row, start_col = np.random.randint(0, size[0]), np.random.randint(0, size[1])
+        if board[start_row, start_col] != -1:
+            break
+
+
+
     # Set the random cell to track the number of generation he cant spread a rumor.
     # Key: the indecise for the cell , Value: 0 for start counting the number of generation we are passing until he can
     # spread rumor again (L generation).
-    rumor_spreaders[(start_row, start_col)] = 0
+    #rumor_spreaders[(start_row, start_col)] = 0 -->> making it in a comment, because truley we chose him to start a
+    # rumor however this line make him to stop spreading a rumor before he even had the change in the main function
+    # of the program
+
+
     # randomly selected cell that start spreaing the rumor will be true
     flags_board[start_row, start_col] = True
     original_doubt_lvl_spreaders = np.copy(board)
     # Creat an object of gui with the initialized parameters.
+    print("calling from main ->>> app = SpreadingRumorsGUI")
     app = SpreadingRumorsGUI(board, rumor_spreaders, L, original_doubt_lvl_spreaders, rumor_received, flags_board)
     # Keep the gui running until the user close the window.
+    print("calling from main ->>> app.mainloop()")
     app.mainloop()
 
     generations = 100

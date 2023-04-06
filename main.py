@@ -1,6 +1,6 @@
 import numpy as np
-import random
-
+import tkinter as tk
+from tkinter import simpledialog
 
 def initialize_board(size, P, s1_ratio, s2_ratio, s3_ratio):
 
@@ -57,6 +57,7 @@ def initialize_board(size, P, s1_ratio, s2_ratio, s3_ratio):
     board[np.unravel_index(s4_indices, size)] = 4
 
     # Return the board after it was randomly initialized.
+    print("Return the board after it was randomly initialized.")
     return board
 
 
@@ -113,6 +114,7 @@ def spread_rumor(board, banned_rumor_spreaders, L, original_doubt_lvl_spreaders,
     :return: Update matrix grid and update matrix of rumor_spreaders.
     """
     # Unpack the Dimensional of the grid.
+    print("We are in START of the spread_rumor method!")
     rows, cols = board.shape
     # Create a copy of the board, so we can hold the updated doubt levels as results of spreading a rumor.
     new_board = np.copy(board)
@@ -125,55 +127,60 @@ def spread_rumor(board, banned_rumor_spreaders, L, original_doubt_lvl_spreaders,
     #new_banned_rumor_spreaders = {}
 
     # Nested loop iterating on each cell in the grid.
-    for row in range(rows):
-        for col in range(cols):
-            # If The cell is false it cant spread a rumor so we contunie to the next cell
-            if not flags_board[row, col]:
-                continue
-            # if the cell value is -1 this means the cell is unpopulated
-            if original_doubt_lvl_spreaders[row, col] == -1:
-                continue
+    counter =0
+    #for row in range(rows):
+    #    for col in range(cols):
+    for row, col in np.argwhere(flags_board):
+        counter += 1
+        print(f"We are in the main loop of the method! num iter: {counter}")
+        # If The cell is false it cant spread a rumor so we contunie to the next cell
+        #if not flags_board[row, col]:
+        #    continue
+        # if the cell value is -1 this means the cell is unpopulated
+        print(f"We start by checking if the cell is populate -> state is: {original_doubt_lvl_spreaders[row, col]}")
+        if original_doubt_lvl_spreaders[row, col] == -1:
+            continue
 
-            # Check if the correct cell in the grid is not banned from spreading rumors.
-            if (row, col) in banned_rumor_spreaders:
-                if banned_rumor_spreaders[(row, col)] < L:
-                    banned_rumor_spreaders[(row, col)] += 1
-                    new_board[row, col] = 0
-                    continue
-                else:
-                    del banned_rumor_spreaders[(row, col)]
-                    new_board[row, col] = original_doubt_lvl_spreaders[row, col]
-
-            if rumor_received[row, col] >= 2:
-                doubt_level = max(1, original_doubt_lvl_spreaders[row, col] - 1)
+        # Check if the correct cell in the grid is not banned from spreading rumors.
+        if (row, col) in banned_rumor_spreaders:
+            if banned_rumor_spreaders[(row, col)] < L:
+                banned_rumor_spreaders[(row, col)] += 1
+                #new_board[row, col] = 0
+                continue
             else:
-                doubt_level = original_doubt_lvl_spreaders[row, col]
+                del banned_rumor_spreaders[(row, col)]
+                new_board[row, col] = original_doubt_lvl_spreaders[row, col]
 
-            new_board[row, col] = doubt_level
-            probability = probabilities[doubt_level]
+        if rumor_received[row, col] >= 2:
+            doubt_level = max(1, original_doubt_lvl_spreaders[row, col] - 1)
+        else:
+            doubt_level = original_doubt_lvl_spreaders[row, col]
 
+        print(original_doubt_lvl_spreaders[row, col])
+        #new_board[row, col] = doubt_level
+        probability = probabilities[doubt_level]
+
+        neighbors = get_neighbors(board, row, col)
+        for r, c in neighbors:
+
+            if original_doubt_lvl_spreaders[r, c] == -1:
+                continue
+            else:
+                #new_board[row, col] = 5
+                flags_board[r, c] = True
+
+        if np.random.random() < probability:
+            print(f"{np.random.random()} < {probability}")
             neighbors = get_neighbors(board, row, col)
+
             for r, c in neighbors:
-                print(r)
-                print(c)
-                if original_doubt_lvl_spreaders[r, c] == -1:
+                if original_doubt_lvl_spreaders[r, c] == -1 or (r, c) in banned_rumor_spreaders:
                     continue
                 else:
                     new_board[row, col] = 5
-                    flags_board[r, c] = True
+                    corrent_rumor_received[r, c] += 1
 
-            if np.random.random() < probability:
-                #new_board[row, col] = 5
-                neighbors = get_neighbors(board, row, col)
-
-                for r, c in neighbors:
-                    if original_doubt_lvl_spreaders[r, c] == -1:
-                        continue
-                    else:
-
-                        corrent_rumor_received[r, c] += 1
-
-                banned_rumor_spreaders[(row, col)] = 0
+            banned_rumor_spreaders[(row, col)] = 0
 
     return new_board, banned_rumor_spreaders, corrent_rumor_received, flags_board
 
