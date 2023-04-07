@@ -1,24 +1,36 @@
 import numpy as np
-import random
 
 
-def initialize_board(size, s1_ratio, s2_ratio, s3_ratio):
+def initialize_board(size, P, s1_ratio, s2_ratio, s3_ratio):
+    """
+    :param size: This value sets the height and width of the grid
+    :param P: The overall density of the population
+    :param s1_ratio: The proportion of people who will believe every rumor they hear
+    :param s2_ratio: The proportion of people who will believe a rumor with a 2/3 probability
+    :param s3_ratio: The proportion of people who will believe a rumor with a 1/3 probability
+    :return: Initialized board will each cell with state of level of doubt.
+    """
     # Unpack the Dimensional of the grid.
     rows, cols = size
-    # Init empty board with 0 in all cells.
-    board = np.zeros(size, dtype=np.uint8)
+    # Init empty board with -1 in all cells.
+    board = np.full(size, -1)
     # Calculate number of cells.
     total_cells = rows * cols
-    # Calculate the number of cells for each level of doubt.
-    num_s1 = int(total_cells * s1_ratio)
-    num_s2 = int(total_cells * s2_ratio)
-    num_s3 = int(total_cells * s3_ratio)
-    # Rest of the cells must be the leftover level of doubt.
-    num_s4 = total_cells - num_s1 - num_s2 - num_s3
+    # Calculate the number of populated cells based on population density P.
+    num_populated_cells = int(total_cells * P)
 
-    # Creat np array in the size of cells in the game.
-    # Fill this array with the indexes of the cells and then shuffle it.
-    cells_idx = np.random.permutation(total_cells)
+    # Creat np array in the size of cells who are populated in the game.
+    # Fill this array with the indexes corresponding the cells and then shuffle it.
+    populated_cells_idx = np.random.permutation(total_cells)[:num_populated_cells]
+
+    # Calculate the number of cells for each level of doubt.
+    num_s1 = int(num_populated_cells * s1_ratio)
+    num_s2 = int(num_populated_cells * s2_ratio)
+    num_s3 = int(num_populated_cells * s3_ratio)
+    # Rest of the cells must be the remaining levels of doubt.
+
+    # Mix again between the different level of doubts.
+    np.random.shuffle(populated_cells_idx)
 
     # Calculate the indexes we need to pick such that each part will be the size of the coressponding level of doubt.
     # First level of doubt will be index 0 until number of cells s1 is taking.
@@ -30,10 +42,10 @@ def initialize_board(size, s1_ratio, s2_ratio, s3_ratio):
     split_index_s3 = split_index_s2 + num_s3
 
     # Now we split the np array into four parts corresponding to the splits index we calculate.
-    s1_indices = cells_idx[:split_index_s1]
-    s2_indices = cells_idx[split_index_s1:split_index_s2]
-    s3_indices = cells_idx[split_index_s2:split_index_s3]
-    s4_indices = cells_idx[split_index_s3:]
+    s1_indices = populated_cells_idx[:split_index_s1]
+    s2_indices = populated_cells_idx[split_index_s1:split_index_s2]
+    s3_indices = populated_cells_idx[split_index_s2:split_index_s3]
+    s4_indices = populated_cells_idx[split_index_s3:]
 
     # Use unravel_index to map the indices from the 1D cell_indices
     # array to their corresponding row and column positions in the 2D grid.
@@ -70,7 +82,7 @@ def get_neighbors(grid, row, col):
     top_left_neighbor = (row + 1, col - 1)
     # Creat a list of potential neighbors indices.
     potential_neighbors = [top_neighbor, top_right_neighbor, right_neighbor, bottom_right_neighbor, bottom_neighbor,
-                            bottom_left_neighbor, left_neighbor, top_left_neighbor]
+                           bottom_left_neighbor, left_neighbor, top_left_neighbor]
 
     # Create a list to store all the valid neighbors indices.
     valid_neighbors = []
@@ -93,7 +105,7 @@ def get_probabilities():
     return {1: 1.0, 2: 2/3, 3: 1/3, 4: 0.0}
 
 
-def spread_rumor(board, L, banned_rumor_spreaders):
+def spread_rumor(board, banned_rumor_spreaders, L, original_doubt_lvl_spreaders, rumor_received, flags_board):
     """
     :param board: Matrix such that in each cell we store the person level of doubt.
     :param L: The amount of generations a rumor spreader waits before spreading a rumor again if he encounters one.
@@ -101,6 +113,7 @@ def spread_rumor(board, L, banned_rumor_spreaders):
                             before spreading a rumor again. each iteration we update this matrix as generation pass's.
     :return: Update matrix grid and update matrix of rumor_spreaders.
     """
+
     # Unpack the Dimensional of the grid.
     rows, cols = board.shape
     # Create a copy of the board, so we can hold the updated doubt levels as results of spreading a rumor.
@@ -108,62 +121,71 @@ def spread_rumor(board, L, banned_rumor_spreaders):
     # Create np array and initialized it with zeros in the size of the grid.
     # We will store in this array the number of rumors that each cell received in this iteration. So if needed we will
     # change the doubt level. (if a cell received at least 2 rumors at the same iteration).
-    rumor_received = np.zeros(board.shape)
+    current_rumor_received = np.zeros(board.shape)
     # Store the dictionary of each doubt level to the corresponding probability.
     probabilities = get_probabilities()
 
     # Nested loop iterating on each cell in the grid.
-    for row in range(rows):
-        for col in range(cols):
-            # Check if the correct cell in the grid is not banned from spreading rumors.
-            if banned_rumor_spreaders[row, col] == 0:
-                # If the cell can spread a rumor we will get the neighbors of this cell, so we know which cells need to
-                # receive the rumor.
-                neighbors = get_neighbors(board, row, col)
+    for row, col in np.argwhere(flags_board):
 
-                # Iterates on each neighbor in the list.
-                for r, c in neighbors:
-                    # Implementation of the rule:
-                    # Generating random number between 0 and 1. If it is less than the probability corresponding to
-                    # the level of doubt of the neighbor, the neighbor will accept the rumor.
-                    if random.random() < probabilities[board[r, c]]:
-                        # Update the matrix that counts the number of rumors each neighbor
-                        # receive in the current iteration
-                        rumor_received[r, c] += 1
-    """
-    banned_rumor_spreaders[banned_rumor_spreaders > 0] -= 1
-    new_rumor_spreaders = (rumor_received >= 2) & (banned_rumor_spreaders == 0)
-    banned_rumor_spreaders[new_rumor_spreaders] = L
+        # if the cell value is -1 this means the cell is unpopulated
+        if original_doubt_lvl_spreaders[row, col] == -1:
+            flags_board[row, col] = False
+            continue
 
-    return new_board, banned_rumor_spreaders
-    """
-    # Update the doubt level of the neighbors temporarily if they received the rumor from at least two other neighbors.
-    temporarily_reduced_doubt_level = (rumor_received >= 2)
-    new_board[temporarily_reduced_doubt_level] = np.maximum(1, new_board[temporarily_reduced_doubt_level] - 1)
+        # Check if the correct cell in the grid is not banned from spreading rumors.
+        if (row, col) in banned_rumor_spreaders:
+            # If the cell still have less than value L it cant spread a
+            # rumor so we will increament the value of generations he waited.
+            # Else The cell have been waited for L generation so this generation he can spread the rumor.
+            if banned_rumor_spreaders[(row, col)] < L:
+                banned_rumor_spreaders[(row, col)] += 1
+                continue
+            else:
+                del banned_rumor_spreaders[(row, col)]
+                new_board[row, col] = original_doubt_lvl_spreaders[row, col]
 
-    # Decrease the countdown timers for all cells that are currently banned from spreading rumors.
-    banned_rumor_spreaders[banned_rumor_spreaders > 0] -= 1
+        # Checking in rumor_received matrix if the cell received the rumor from 2 or above neighbors.
+        # If the cell received the rumor he currently wants to spread from more than two neighbors
+        # If the above true, the cell will temporarily reduce his level of doubt when
+        # he decides if to spread to rumor or not.
+        # Else, the level of doubt stay the same as it was originally set.
+        if rumor_received[row, col] >= 2:
+            doubt_level = max(1, original_doubt_lvl_spreaders[row, col] - 1)
+        else:
+            doubt_level = original_doubt_lvl_spreaders[row, col]
 
-    # Update the banned_rumor_spreaders array based on cells that have received the rumor from at least 2 neighbors.
-    new_rumor_spreaders = (rumor_received >= 2) & (banned_rumor_spreaders == 0)
-    banned_rumor_spreaders[new_rumor_spreaders] = L
+        # Store the probability of the cell to spread the rumor he received.
+        probability = probabilities[doubt_level]
 
-    return new_board, banned_rumor_spreaders
+        neighbors = get_neighbors(board, row, col)
+        """
+        for r, c in neighbors:
+            if original_doubt_lvl_spreaders[r, c] == -1:
+                continue
+            else:
+                flags_board[r, c] = True
 
+        if np.random.random() < probability:
+            for r, c in neighbors:
+                if original_doubt_lvl_spreaders[r, c] == -1 or (r, c) in banned_rumor_spreaders:
+                    continue
+                else:
+                    new_board[row, col] = 5
+                    current_rumor_received[r, c] += 1
+        """
+        for r, c in neighbors:
+            if original_doubt_lvl_spreaders[r, c] == -1 or (r, c) in banned_rumor_spreaders:
+                continue
+            else:
+                #flags_board[r, c] = True
 
+                if np.random.random() < probability:
+                    flags_board[r, c] = True
+                    print(f"{np.random.random()} < {probability} ")
+                    new_board[row, col] = 5
+                    current_rumor_received[r, c] += 1
 
+                    banned_rumor_spreaders[(row, col)] = 0
 
-def run_spreading_rumors(iterations, size=(100, 100), s1_ratio=0.25, s2_ratio=0.25, s3_ratio=0.25, L=5):
-    board = initialize_board(size, s1_ratio, s2_ratio, s3_ratio)
-    rumor_spreaders = np.zeros(size, dtype=np.uint8)
-
-    # Randomly select a person to start spreading the rumor
-    start_row, start_col = np.random.randint(0, size[0]), np.random.randint(0, size[1])
-    rumor_spreaders[start_row, start_col] = L
-
-    for i in range(iterations):
-        print(f"Iteration {i}:")
-        print(board)
-        board, rumor_spreaders = spread_rumor(board, L, rumor_spreaders)
-
-    return board
+    return new_board, banned_rumor_spreaders, current_rumor_received, flags_board
