@@ -3,7 +3,7 @@ from main import initialize_board, spread_rumor, initialize_board_clusters
 import numpy as np
 from tkinter import simpledialog
 import matplotlib.pyplot as plt
-
+import main as m
 
 class SpreadingRumorsGUI(tk.Tk):
     """
@@ -65,7 +65,7 @@ class SpreadingRumorsGUI(tk.Tk):
         # 3 - believe in p=1/3,
         # 2 - believe in 2/3,
         # 1 - believe in everything.
-        colors = {-1: "white", 0: "black", 1: "blue", 2: "green", 3: "yellow", 4: "red", 5: "pink"}
+        colors = {-1: "white", 0: "black", 1: "blue", 2: "green", 3: "orange", 4: "red", 5: "pink"}
 
         # Nested loop iterating on each cell in the grid.
         for row in range(self.board.shape[0]):
@@ -133,7 +133,7 @@ class SpreadingRumorsGUI(tk.Tk):
 
         iterations = range(len(self.doubt_level_percentages[1]))
 
-        colors = {1: "blue", 2: "green", 3: "yellow", 4: "red", 5: "pink"}
+        colors = {1: "blue", 2: "green", 3: "orange", 4: "red", 5: "pink"}
         labels = {
             1: "S1 - Believe everything",
             2: "S2 - Believe with 2/3 probability",
@@ -150,7 +150,8 @@ class SpreadingRumorsGUI(tk.Tk):
         plt.ylabel("Percentage")
         plt.title("Doubt Level Percentages Over Time")
         plt.legend(loc="best")
-        plt.savefig("rumor_spreading_over_time.png", dpi=600)
+        plt.savefig("Doubt_Level_Percentages_Over_Time.png", dpi=600)
+
         plt.show()
 
     def calculate_doubt_level_percentages(self):
@@ -259,14 +260,12 @@ if __name__ == "__main__":
         board = initialize_board(size, P, s1_ratio, s2_ratio, s3_ratio)
     elif board_choice == "Clusters":
         board = initialize_board_clusters(size, P, s1_ratio, s2_ratio, s3_ratio)
-    elif board_choice == "Clusters 2":
+    elif board_choice == "Default 2":
         # Initialize board for Board 2
-        np.random.seed(2)
-        board = np.random.choice([0, 1, 2], size=size, p=[P, s1_ratio, s2_ratio])
+        board = m.initialize_nested_rectangles_board(size, P, s1_ratio, s2_ratio, s3_ratio)
     elif board_choice == "Board 3":
         # Initialize board for Board 3
-        np.random.seed(3)
-        board = np.random.choice([0, 1, 2], size=size, p=[P, s1_ratio, s2_ratio])
+        board = m.initialize_board_nested_rectangles(size, P, s1_ratio, s2_ratio, s3_ratio)
     else:
         raise ValueError(f"Invalid board_choice: {board_choice}")
 
@@ -294,6 +293,8 @@ if __name__ == "__main__":
         if board[start_row, start_col] != -1:
             break
 
+    start_row = 50
+    start_col = 50
     # randomly selected cell that start spreaing the rumor will be true
     flags_board[start_row, start_col] = True
     original_doubt_lvl_spreaders = np.copy(board)
