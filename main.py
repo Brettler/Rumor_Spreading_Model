@@ -83,9 +83,9 @@ def get_neighbors(grid, row, col):
     left_neighbor = (row, col - 1)
     top_left_neighbor = (row + 1, col - 1)
     # Creat a list of potential neighbors indices.
-    potential_neighbors = [top_neighbor, top_right_neighbor, right_neighbor, bottom_right_neighbor, bottom_neighbor,
-                           bottom_left_neighbor, left_neighbor, top_left_neighbor]
-    #potential_neighbors = [top_neighbor, right_neighbor, bottom_neighbor, left_neighbor]
+    #potential_neighbors = [top_neighbor, top_right_neighbor, right_neighbor, bottom_right_neighbor, bottom_neighbor,
+    #                       bottom_left_neighbor, left_neighbor, top_left_neighbor]
+    potential_neighbors = [top_neighbor, right_neighbor, bottom_neighbor, left_neighbor]
     # Create a list to store all the valid neighbors indices.
     valid_neighbors = []
 
