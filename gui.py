@@ -14,7 +14,7 @@ class SpreadingRumorsGUI(tk.Tk):
     """
     def __init__(self, board, banned_rumor_spreaders, L, original_doubt_lvl_spreaders,
                  rumor_received, flags_board, manual_simulation, num_generations, num_populated_cells,
-                 exposed_precentages = 0, cell_size=10):
+                 exposed_precentages = 0, cell_size=7):
         # Calling the parent constructor to generate the main windows for display.
         super().__init__()
         self.title("Spreading Rumors Model")
@@ -118,8 +118,6 @@ class SpreadingRumorsGUI(tk.Tk):
         self.current_iteration += 1
         self.iteration_label.config(text=f"Iteration: {self.current_iteration}")
         # Running the simulation until 100 iteration:
-        print(self.num_generations)
-        print(self.current_iteration)
 
         if self.current_iteration < self.num_generations:
             # Calculate the percentage of each doubt of level for each iteration to make meaningful
@@ -383,7 +381,7 @@ if __name__ == "__main__":
 
     # Check if the selected cell has a level of doubt of 4
     if board[start_row, start_col] == 4:
-        messagebox.showwarning("Oh no! a level S4 square has been selected! The rumor will not spread!")
+        messagebox.showwarning("Warning", "Oh no! a level S4 square has been selected! The rumor will not spread!")
 
     # Initialized empty dictionary in the size of the board. When we select the random cell to start the rumor we will
     # select this cell in the 'banned_rumor_spreaders' to track how
