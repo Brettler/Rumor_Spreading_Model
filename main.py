@@ -1,27 +1,22 @@
 import numpy as np
 
 
-
 def initialize_board(size, P, s1_ratio, s2_ratio, s3_ratio):
     """
-    :param size: This value sets the height and width of the grid
-    :param P: The overall density of the population
-    :param s1_ratio: The proportion of people who will believe every rumor they hear
-    :param s2_ratio: The proportion of people who will believe a rumor with a 2/3 probability
-    :param s3_ratio: The proportion of people who will believe a rumor with a 1/3 probability
-    :return: Initialized board will each cell with state of level of doubt.
-            Also return the number of cells that are populated
+    :param size: This value sets the height and width of the grid.
+    :param P: The overall density of the population.
+    :param s1_ratio: The proportion of people who will believe every rumor they hear.
+    :param s2_ratio: The proportion of people who will believe a rumor with a 2/3 probability.
+    :param s3_ratio: The proportion of people who will believe a rumor with a 1/3 probability.
+    :return: Initialized board with each cell's level of doubt.
+            Also return the number of cells that are populated.
     """
-    # Unpack the Dimensional of the grid.
-    rows, cols = size
-    # Init empty board with -1 in all cells.
-    board = np.full(size, -1)
-    # Calculate number of cells.
-    total_cells = rows * cols
-    # Calculate the number of populated cells based on population density P.
-    num_populated_cells = int(total_cells * P)
+    rows, cols = size           # Unpack the dimensions of the grid.
+    board = np.full(size, -1)   # Initialize an empty board with -1 in all cells.
+    total_cells = rows * cols   # Calculate the number of cells.
+    num_populated_cells = int(total_cells * P)  # Calculate the number of populated cells based on population density P.
 
-    # Creat np array in the size of cells who are populated in the game.
+    # Create an array the size of the number of populated cells.
     # Fill this array with the indexes corresponding the cells and then shuffle it.
     populated_cells_idx = np.random.permutation(total_cells)[:num_populated_cells]
 
@@ -29,31 +24,30 @@ def initialize_board(size, P, s1_ratio, s2_ratio, s3_ratio):
     num_s1 = int(num_populated_cells * s1_ratio)
     num_s2 = int(num_populated_cells * s2_ratio)
     num_s3 = int(num_populated_cells * s3_ratio)
-    # Rest of the cells must be the remaining levels of doubt.
+    # Rest of the cells must be the remaining levels of doubt, S4.
 
     # Mix again between the different level of doubts.
     np.random.shuffle(populated_cells_idx)
 
-    # Calculate the indexes we need to pick such that each part will be the size of the coressponding level of doubt.
-    # First level of doubt will be index 0 until number of cells s1 is taking.
+    # Calculate the indexes we need to pick so that each part will be the size of the corresponding level of doubt.
+    # First level of doubt will be index 0 until the number of cells for S1 are taken.
     split_index_s1 = num_s1
-    # Second level of doubt will start in the index s1 finished and will take over num_s2 cells, meaning it will finish
+    # Second level of doubt will start at the index S1 ended and will take over num_s2 cells, meaning it will finish
     # in cell split_index_s1 + num_s2.
     split_index_s2 = split_index_s1 + num_s2
-    # Same as we explain above. index of s4 will just be the rest of the array.
+    # Same as we explained above, index of S4 will just be the rest of the array.
     split_index_s3 = split_index_s2 + num_s3
 
-    # Now we split the np array into four parts corresponding to the splits index we calculate.
+    # Now we split the array into four parts corresponding to the split indices we calculated.
     s1_indices = populated_cells_idx[:split_index_s1]
     s2_indices = populated_cells_idx[split_index_s1:split_index_s2]
     s3_indices = populated_cells_idx[split_index_s2:split_index_s3]
     s4_indices = populated_cells_idx[split_index_s3:]
 
-    # Use unravel_index to map the indices from the 1D cell_indices
-    # array to their corresponding row and column positions in the 2D grid.
-    # The function takes the index from the 1D array (s1_indices, s2_indices, etc.)
-    # and the size of the target 2D array (in our case, 100x100),
-    # and places the respective doubt level value (1, 2, 3, or 4) into the corresponding position in the board.
+    # Use unravel_index to map the indices from the 1D cell_indices array, to their corresponding row and column
+    # positions in the 2D grid. The function takes the index from the 1D array (s1_indices, s2_indices, etc.)
+    # and the size of the target 2D array (in our case, 100x100), then places the respective doubt level value
+    # (1, 2, 3, or 4) into the corresponding position in the board.
     board[np.unravel_index(s1_indices, size)] = 1
     board[np.unravel_index(s2_indices, size)] = 2
     board[np.unravel_index(s3_indices, size)] = 3
