@@ -14,7 +14,7 @@ class SpreadingRumorsGUI(tk.Tk):
     """
     def __init__(self, board, banned_rumor_spreaders, L, original_doubt_lvl_spreaders,
                  rumor_received, flags_board, manual_simulation, num_generations, num_populated_cells,
-                 exposed_precentages = 0, cell_size=7):
+                 exposed_precentages = 0, cell_size=8):
         # Calling the parent constructor to generate the main windows for display.
         super().__init__()
         self.title("Spreading Rumors Model")
