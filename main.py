@@ -10,6 +10,7 @@ def initialize_board(size, P, s1_ratio, s2_ratio, s3_ratio):
     :param s2_ratio: The proportion of people who will believe a rumor with a 2/3 probability
     :param s3_ratio: The proportion of people who will believe a rumor with a 1/3 probability
     :return: Initialized board will each cell with state of level of doubt.
+            Also return the number of cells that are populated
     """
     # Unpack the Dimensional of the grid.
     rows, cols = size
@@ -59,7 +60,7 @@ def initialize_board(size, P, s1_ratio, s2_ratio, s3_ratio):
     board[np.unravel_index(s4_indices, size)] = 4
 
     # Return the board after it was randomly initialized.
-    return board
+    return board, num_populated_cells
 
 
 def get_neighbors(grid, row, col):
@@ -93,7 +94,6 @@ def get_neighbors(grid, row, col):
         if ((0 > r or r >= rows) or (0 > c or c >= cols)) or (grid[r, c] == -1):
             continue
         # Check if the neighbor's row and column indices are within the grid's boundaries
-        # /// check if  the neighbor is -1 /////////////////////////////
         if 0 <= r < rows and 0 <= c < cols:
             # If the neighbor is within the grid, append its coordinates to the valid_neighbors list
             valid_neighbors.append((r, c))
@@ -183,7 +183,14 @@ def spread_rumor(board, banned_rumor_spreaders, L, original_doubt_lvl_spreaders,
     return new_board, banned_rumor_spreaders, current_rumor_received, flags_board, exposed_percentages
 
 
-def initialize_board_clusters(size, P, s1_ratio, s2_ratio, s3_ratio):
+def initialize_board_Layers(size, P, s1_ratio, s2_ratio, s3_ratio):
+    """
+      :param size: This value sets the height and width of the grid
+      :param s1_ratio: The proportion of the innermost rectangle for people who will believe every rumor they hear
+      :param s2_ratio: The proportion of the second rectangle for people who will believe a rumor with a 2/3 probability
+      :param s3_ratio: The proportion of the third rectangle for people who will believe a rumor with a 1/3 probability
+      :return: Initialized board will each cell with state of level of doubt.
+    """
     rows, cols = size
     board = np.full(size, -1)
 
@@ -207,22 +214,11 @@ def initialize_board_clusters(size, P, s1_ratio, s2_ratio, s3_ratio):
     return board
 
 
-def initialize_nested_rectangles_board(size, P, s1_ratio, s2_ratio, s3_ratio):
+def initialize_board_half_half(size, s1_ratio, s2_ratio, s3_ratio):
     rows, cols = size
     board = np.full(size, -1)
-    total_cells = rows * cols
-    num_populated_cells = int(total_cells * P)
-    populated_cells_idx = np.random.permutation(total_cells)[:num_populated_cells]
+    # Calculate s4_ratio ration.
     s4_ratio = 1 - (s1_ratio + s2_ratio + s3_ratio)
-    num_s1 = int(num_populated_cells * s1_ratio)
-    num_s2 = int(num_populated_cells * s2_ratio)
-    num_s3 = int(num_populated_cells * s3_ratio)
-    num_s4 = num_populated_cells - (num_s1 + num_s2 + num_s3)
-
-    s1_indices = populated_cells_idx[:num_s1]
-    s2_indices = populated_cells_idx[num_s1:num_s1 + num_s2]
-    s3_indices = populated_cells_idx[num_s1 + num_s2:num_s1 + num_s2 + num_s3]
-    s4_indices = populated_cells_idx[num_s1 + num_s2 + num_s3:]
 
     for i in range(rows):
         for j in range(cols):
@@ -239,14 +235,8 @@ def initialize_nested_rectangles_board(size, P, s1_ratio, s2_ratio, s3_ratio):
     return board
 
 
-def initialize_board_nested_rectangles(size, P, s1_ratio, s2_ratio, s3_ratio):
-    """
-    :param size: This value sets the height and width of the grid
-    :param s1_ratio: The proportion of the innermost rectangle for people who will believe every rumor they hear
-    :param s2_ratio: The proportion of the second rectangle for people who will believe a rumor with a 2/3 probability
-    :param s3_ratio: The proportion of the third rectangle for people who will believe a rumor with a 1/3 probability
-    :return: Initialized board will each cell with state of level of doubt.
-    """
+def initialize_board_nested_rectangles(size):
+
     rows, cols = size
     board = np.full(size, -1)
 
