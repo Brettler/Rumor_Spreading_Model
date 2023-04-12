@@ -1,7 +1,7 @@
 import tkinter as tk
 from main import spread_rumor
 import numpy as np
-from tkinter import simpledialog
+from tkinter import simpledialog, messagebox
 # Using to draw the plots.
 import matplotlib.pyplot as plt
 import main as m
@@ -122,22 +122,15 @@ class SpreadingRumorsGUI(tk.Tk):
         print(self.current_iteration)
 
         if self.current_iteration < self.num_generations:
-            self.calculate_doubt_level_percentages()
-            self.after(200, self.update_canvas)
-
-
-        """
-        for _ in range(self.num_generations):
             # Calculate the percentage of each doubt of level for each iteration to make meaningful
             # figures to our report.
             self.calculate_doubt_level_percentages()
             # Method from tkinter package, updating the canvas after 100 milliseconds. This way we make more
             # responsive and understandable visualization when passing generations.
             self.after(200, self.update_canvas)
-        """
+
         # Finished running the simulation and its time for results:
         if int(self.current_iteration) == int(self.num_generations):
-            print("Finished running the simulation and its time for results")
             # Calcualte the number of cells that exposed to a rumor (all cells that are true exposed)
             exposed_population = np.sum(self.flags_board)
             self.results["Number of people who received the rumor"] = exposed_population
@@ -387,6 +380,10 @@ if __name__ == "__main__":
     elif board_choice == "Nested Rectangles":
         # Initialize board for Board 3
         board = m.initialize_board_nested_rectangles(size)
+
+    # Check if the selected cell has a level of doubt of 4
+    if board[start_row, start_col] == 4:
+        messagebox.showwarning("Oh no! a level S4 square has been selected! The rumor will not spread!")
 
     # Initialized empty dictionary in the size of the board. When we select the random cell to start the rumor we will
     # select this cell in the 'banned_rumor_spreaders' to track how
