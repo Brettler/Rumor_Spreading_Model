@@ -14,7 +14,7 @@ class SpreadingRumorsGUI(tk.Tk):
     """
     def __init__(self, board, banned_rumor_spreaders, L, original_doubt_lvl_spreaders,
                  rumor_received, flags_board, manual_simulation, num_generations, num_populated_cells,
-                 exposed_precentages = 0, cell_size=8):
+                 exposed_precentages = 0, cell_size=10):
         # Calling the parent constructor to generate the main windows for display.
         super().__init__()
         self.title("Spreading Rumors Model")
@@ -141,7 +141,8 @@ class SpreadingRumorsGUI(tk.Tk):
                         never_exposed += 1
             self.results["Number of people who never received the rumor:"] = never_exposed
             never_exposed_percentages = (never_exposed / num_populated_cells) * 100
-            self.results["Percentage of people who never received the rumor"] = never_exposed_percentages
+            rounded_percentage = round(never_exposed_percentages, 3)
+            self.results["Percentage of people who never received the rumor"] = rounded_percentage
             # Calling the methods to generate the plot needed for our report:
             self.plot_exposed_population_percentages()
             self.plot_doubt_level_percentages()
@@ -202,7 +203,8 @@ class SpreadingRumorsGUI(tk.Tk):
         for doubt_level in self.doubt_level_percentages.keys():
             count = np.sum(self.board == doubt_level)
             percentage = (count / total_population) * 100
-            self.doubt_level_percentages[doubt_level].append(percentage)
+            rounded_percentage = round(percentage, 3)
+            self.doubt_level_percentages[doubt_level].append(rounded_percentage)
     ###########################################################################################
     ###########################################################################################
 
@@ -365,6 +367,7 @@ if __name__ == "__main__":
             start_row, start_col = np.random.randint(0, size[0]), np.random.randint(0, size[1])
             if board[start_row, start_col] != -1:
                 break
+
     else:
         start_row = 50
         start_col = 50
