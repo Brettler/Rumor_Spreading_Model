@@ -131,7 +131,8 @@ class SpreadingRumorsGUI(tk.Tk):
                         never_exposed += 1
             self.results["Number of people who never received the rumor:"] = never_exposed
             never_exposed_percentages = (never_exposed / num_populated_cells) * 100
-            self.results["Percentage of people who never received the rumor"] = never_exposed_percentages
+            rounded_percentage = round(never_exposed_percentages, 3)
+            self.results["Percentage of people who never received the rumor"] = rounded_percentage
 
             # Methods for generating plots:
             self.plot_exposed_population_percentages()
@@ -185,12 +186,12 @@ class SpreadingRumorsGUI(tk.Tk):
         plt.show()
 
     def calculate_doubt_level_percentages(self):
-        total_population = np.sum(self.board != -1)
-        for doubt_level in self.doubt_level_percentages.keys():
-            count = np.sum(self.board == doubt_level)
-            percentage = (count / total_population) * 100
-            self.doubt_level_percentages[doubt_level].append(percentage)
-
+           total_population = np.sum(self.board != -1)
+           for doubt_level in self.doubt_level_percentages.keys():
+               count = np.sum(self.board == doubt_level)
+               percentage = (count / total_population) * 100
+               rounded_percentage = round(percentage, 3)
+               self.doubt_level_percentages[doubt_level].append(rounded_percentage)
     ###########################################################################################
     ###########################################################################################
 
@@ -377,4 +378,3 @@ if __name__ == "__main__":
                              manual_simulation, num_generations, num_populated_cells)
     # Keep the GUI running until the user closes the window.
     GUI.mainloop()
-
