@@ -321,8 +321,8 @@ if __name__ == "__main__":
         initial_parameters_window.parameters
     # Generate the size of the board (Height, Width).
     size = (size, size)
-    start_row = None
-    start_col = None
+    start_row = 50
+    start_col = 50
     board = None
     num_populated_cells = 0
 
@@ -338,19 +338,28 @@ if __name__ == "__main__":
             start_row, start_col = np.random.randint(0, size[0]), np.random.randint(0, size[1])
             if board[start_row, start_col] != -1:
                 break
-    else:
-        start_row = 50
-        start_col = 50
+
     # Rest of the boards will be deterministic and will answer part B.
     if board_choice == "Layers":
         # We split this board into four parts, each will be filled with different levels of doubt.
-        board = m.initialize_board_Layers(size, P, s1_ratio, s2_ratio, s3_ratio)
+        board, num_populated_cells = m.initialize_board_Layers(size, P, s1_ratio, s2_ratio, s3_ratio)
     elif board_choice == "Half&Half":
         # This board will be split in two.
-        board = m.initialize_board_half_half(size, s1_ratio, s2_ratio, s3_ratio)
+        board, num_populated_cells = m.initialize_board_half_half(size, P, s1_ratio, s2_ratio, s3_ratio)
     elif board_choice == "Nested Rectangles":
         # Initialize board for Board 3.
-        board = m.initialize_board_nested_rectangles(size)
+        board, num_populated_cells = m.initialize_board_nested_rectangles(size, P)
+
+    while True:
+        if board[start_row, start_col] != -1:
+            break
+        else:
+            neighbors_list = m.get_neighbors(board, start_row, start_col)
+            for r, c in neighbors_list:
+                start_row = r
+                start_col = c
+                if board[start_row, start_col] != -1:
+                    break
 
     # Check if the selected cell has a level of doubt of four.
     if board[start_row, start_col] == 4:
