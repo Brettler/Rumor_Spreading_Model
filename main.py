@@ -1,26 +1,22 @@
 import numpy as np
 
 
-
 def initialize_board(size, P, s1_ratio, s2_ratio, s3_ratio):
     """
-    :param size: This value sets the height and width of the grid
-    :param P: The overall density of the population
-    :param s1_ratio: The proportion of people who will believe every rumor they hear
-    :param s2_ratio: The proportion of people who will believe a rumor with a 2/3 probability
-    :param s3_ratio: The proportion of people who will believe a rumor with a 1/3 probability
-    :return: Initialized board will each cell with state of level of doubt.
+    :param size: This value sets the height and width of the grid.
+    :param P: The overall density of the population.
+    :param s1_ratio: The proportion of people who will believe every rumor they hear.
+    :param s2_ratio: The proportion of people who will believe a rumor with a 2/3 probability.
+    :param s3_ratio: The proportion of people who will believe a rumor with a 1/3 probability.
+    :return: Initialized board with each cell's level of doubt.
+            Also return the number of cells that are populated.
     """
-    # Unpack the Dimensional of the grid.
-    rows, cols = size
-    # Init empty board with -1 in all cells.
-    board = np.full(size, -1)
-    # Calculate number of cells.
-    total_cells = rows * cols
-    # Calculate the number of populated cells based on population density P.
-    num_populated_cells = int(total_cells * P)
+    rows, cols = size           # Unpack the dimensions of the grid.
+    board = np.full(size, -1)   # Initialize an empty board with -1 in all cells.
+    total_cells = rows * cols   # Calculate the number of cells.
+    num_populated_cells = int(total_cells * P)  # Calculate the number of populated cells based on population density P.
 
-    # Creat np array in the size of cells who are populated in the game.
+    # Create an array the size of the number of populated cells.
     # Fill this array with the indexes corresponding the cells and then shuffle it.
     populated_cells_idx = np.random.permutation(total_cells)[:num_populated_cells]
 
@@ -28,38 +24,37 @@ def initialize_board(size, P, s1_ratio, s2_ratio, s3_ratio):
     num_s1 = int(num_populated_cells * s1_ratio)
     num_s2 = int(num_populated_cells * s2_ratio)
     num_s3 = int(num_populated_cells * s3_ratio)
-    # Rest of the cells must be the remaining levels of doubt.
+    # Rest of the cells must be the remaining levels of doubt, S4.
 
     # Mix again between the different level of doubts.
     np.random.shuffle(populated_cells_idx)
 
-    # Calculate the indexes we need to pick such that each part will be the size of the coressponding level of doubt.
-    # First level of doubt will be index 0 until number of cells s1 is taking.
+    # Calculate the indexes we need to pick so that each part will be the size of the corresponding level of doubt.
+    # First level of doubt will be index 0 until the number of cells for S1 are taken.
     split_index_s1 = num_s1
-    # Second level of doubt will start in the index s1 finished and will take over num_s2 cells, meaning it will finish
+    # Second level of doubt will start at the index S1 ended and will take over num_s2 cells, meaning it will finish
     # in cell split_index_s1 + num_s2.
     split_index_s2 = split_index_s1 + num_s2
-    # Same as we explain above. index of s4 will just be the rest of the array.
+    # Same as we explained above, index of S4 will just be the rest of the array.
     split_index_s3 = split_index_s2 + num_s3
 
-    # Now we split the np array into four parts corresponding to the splits index we calculate.
+    # Now we split the array into four parts corresponding to the split indices we calculated.
     s1_indices = populated_cells_idx[:split_index_s1]
     s2_indices = populated_cells_idx[split_index_s1:split_index_s2]
     s3_indices = populated_cells_idx[split_index_s2:split_index_s3]
     s4_indices = populated_cells_idx[split_index_s3:]
 
-    # Use unravel_index to map the indices from the 1D cell_indices
-    # array to their corresponding row and column positions in the 2D grid.
-    # The function takes the index from the 1D array (s1_indices, s2_indices, etc.)
-    # and the size of the target 2D array (in our case, 100x100),
-    # and places the respective doubt level value (1, 2, 3, or 4) into the corresponding position in the board.
+    # Use unravel_index to map the indices from the 1D cell_indices array, to their corresponding row and column
+    # positions in the 2D grid. The function takes the index from the 1D array (s1_indices, s2_indices, etc.)
+    # and the size of the target 2D array (in our case, 100x100), then places the respective doubt level value
+    # (1, 2, 3, or 4) into the corresponding position in the board.
     board[np.unravel_index(s1_indices, size)] = 1
     board[np.unravel_index(s2_indices, size)] = 2
     board[np.unravel_index(s3_indices, size)] = 3
     board[np.unravel_index(s4_indices, size)] = 4
 
     # Return the board after it was randomly initialized.
-    return board
+    return board, num_populated_cells
 
 
 def get_neighbors(grid, row, col):
@@ -84,7 +79,7 @@ def get_neighbors(grid, row, col):
     # Creat a list of potential neighbors indices.
     potential_neighbors = [top_neighbor, top_right_neighbor, right_neighbor, bottom_right_neighbor, bottom_neighbor,
                            bottom_left_neighbor, left_neighbor, top_left_neighbor]
-
+    #potential_neighbors = [top_neighbor, right_neighbor, bottom_neighbor, left_neighbor]
     # Create a list to store all the valid neighbors indices.
     valid_neighbors = []
 
@@ -93,7 +88,6 @@ def get_neighbors(grid, row, col):
         if ((0 > r or r >= rows) or (0 > c or c >= cols)) or (grid[r, c] == -1):
             continue
         # Check if the neighbor's row and column indices are within the grid's boundaries
-        # /// check if  the neighbor is -1 /////////////////////////////
         if 0 <= r < rows and 0 <= c < cols:
             # If the neighbor is within the grid, append its coordinates to the valid_neighbors list
             valid_neighbors.append((r, c))
@@ -111,7 +105,7 @@ def get_probabilities():
 
 def spread_rumor(board, banned_rumor_spreaders, L, original_doubt_lvl_spreaders, rumor_received, flags_board):
     """
-    :param board: Matrix such that in each cell we store the person level of doubt.
+    :param board: (np.array) Matrix with each cell containing the person's level of doubt.
     :param L: The amount of generations a rumor spreader waits before spreading a rumor again if he encounters one.
     :param banned_rumor_spreaders: Dictionary that save in each cell he number (L) of generations a rumor spreader waits
                             before spreading a rumor again. each iteration we update this matrix as generation pass's.
@@ -183,48 +177,80 @@ def spread_rumor(board, banned_rumor_spreaders, L, original_doubt_lvl_spreaders,
     return new_board, banned_rumor_spreaders, current_rumor_received, flags_board, exposed_percentages
 
 
+def initialize_board_Layers(size, P, s1_ratio, s2_ratio, s3_ratio):
+    """
+      :param size: This value sets the height and width of the grid
+      :param s1_ratio: The proportion of the innermost rectangle for people who will believe every rumor they hear
+      :param s2_ratio: The proportion of the second rectangle for people who will believe a rumor with a 2/3 probability
+      :param s3_ratio: The proportion of the third rectangle for people who will believe a rumor with a 1/3 probability
+      :return: Initialized board will each cell with state of level of doubt.
+    """
+    rows, cols = size
+    board = np.full(size, -1)
 
-def initialize_board_clusters(size, P, s1_ratio, s2_ratio, s3_ratio, cluster_size=10):
-    # Initialize an empty board
-    board = np.zeros(size, dtype=int)
+    layer_1_height = int(rows * s1_ratio)
+    layer_2_height = int(rows * s2_ratio)
+    layer_3_height = int(rows * s3_ratio)
+    layer_4_height = rows - (layer_1_height + layer_2_height + layer_3_height)
 
-    # Calculate the number of populated cells based on population density P
-    total_cells = size[0] * size[1]
-    n_populated = int(total_cells * P)
-
-    # Calculate the number of clusters for each doubt level, scaled by the population density
-    n_s1 = int(n_populated * s1_ratio)
-    n_s2 = int(n_populated * s2_ratio)
-    n_s3 = int(n_populated * s3_ratio)
-
-    def grow_cluster(seed_x, seed_y, cluster_size, value):
-        cluster_points = [(seed_x, seed_y)]
-        board[seed_x, seed_y] = value
-        for _ in range(cluster_size):
-            if not cluster_points:
-                break
-            x, y = cluster_points.pop()
-            neighbors = [(x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)]
-            for nx, ny in neighbors:
-                if 0 <= nx < size[0] and 0 <= ny < size[1] and board[nx, ny] == 0:
-                    board[nx, ny] = value
-                    cluster_points.append((nx, ny))
-
-    # Create clusters for each doubt level
-    for _ in range(n_s1):
-        seed_x, seed_y = np.random.randint(0, size[0]), np.random.randint(0, size[1])
-        grow_cluster(seed_x, seed_y, cluster_size, 1)
-
-    for _ in range(n_s2):
-        seed_x, seed_y = np.random.randint(0, size[0]), np.random.randint(0, size[1])
-        grow_cluster(seed_x, seed_y, cluster_size, 2)
-
-    for _ in range(n_s3):
-        seed_x, seed_y = np.random.randint(0, size[0]), np.random.randint(0, size[1])
-        grow_cluster(seed_x, seed_y, cluster_size, 3)
-
-    # Fill the remaining cells with immune individuals
-    board[board == 0] = 0
+    for i in range(rows):
+        for j in range(cols):
+            if np.random.random() < P:
+                if i < layer_1_height:
+                    board[i, j] = 1
+                elif i < layer_1_height + layer_2_height:
+                    board[i, j] = 2
+                elif i < layer_1_height + layer_2_height + layer_3_height:
+                    board[i, j] = 3
+                else:
+                    board[i, j] = 4
 
     return board
 
+
+def initialize_board_half_half(size, s1_ratio, s2_ratio, s3_ratio):
+    rows, cols = size
+    board = np.full(size, -1)
+    # Calculate s4_ratio ration.
+    s4_ratio = 1 - (s1_ratio + s2_ratio + s3_ratio)
+
+    for i in range(rows):
+        for j in range(cols):
+            if i == j:
+                board[i, j] = np.random.choice([1, 2, 3, 4],
+                                               p=[s1_ratio, s2_ratio, s3_ratio, 1 - (s1_ratio + s2_ratio + s3_ratio)])
+            elif i < j:
+                board[i, j] = np.random.choice([1, 2],
+                                               p=[s1_ratio / (s1_ratio + s2_ratio), s2_ratio / (s1_ratio + s2_ratio)])
+            else:
+                board[i, j] = np.random.choice([3, 4],
+                                               p=[s3_ratio / (s3_ratio + s4_ratio), s4_ratio / (s3_ratio + s4_ratio)])
+
+    return board
+
+
+def initialize_board_nested_rectangles(size):
+
+    rows, cols = size
+    board = np.full(size, -1)
+
+    layer_1_thickness = 20
+    layer_2_thickness = 15
+    layer_3_thickness = 10
+    layer_4_thickness = 10
+
+    for i in range(rows):
+        for j in range(cols):
+            if i < layer_1_thickness or j < layer_1_thickness or i >= rows - layer_1_thickness or j >= cols - layer_1_thickness:
+                board[i, j] = 4
+            elif i < layer_1_thickness + layer_2_thickness or j < layer_1_thickness + layer_2_thickness or i >= rows - (
+                    layer_1_thickness + layer_2_thickness) or j >= cols - (layer_1_thickness + layer_2_thickness):
+                board[i, j] = 3
+            elif i < layer_1_thickness + layer_2_thickness + layer_3_thickness or j < layer_1_thickness + layer_2_thickness + layer_3_thickness or i >= rows - (
+                    layer_1_thickness + layer_2_thickness + layer_3_thickness) or j >= cols - (
+                    layer_1_thickness + layer_2_thickness + layer_3_thickness):
+                board[i, j] = 2
+            elif i < layer_1_thickness + layer_2_thickness + layer_3_thickness + layer_4_thickness and j < layer_1_thickness + layer_2_thickness + layer_3_thickness + layer_4_thickness:
+                board[i, j] = 1
+
+    return board
