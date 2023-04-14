@@ -79,6 +79,7 @@ def get_neighbors(grid, row, col):
     # Creat a list of potential neighbors indices.
     potential_neighbors = [top_neighbor, top_right_neighbor, right_neighbor, bottom_right_neighbor, bottom_neighbor,
                            bottom_left_neighbor, left_neighbor, top_left_neighbor]
+    ######################## need to do special mode for question B if needed ######################
     #potential_neighbors = [top_neighbor, right_neighbor, bottom_neighbor, left_neighbor]
     # Create a list to store all the valid neighbors indices.
     valid_neighbors = []
