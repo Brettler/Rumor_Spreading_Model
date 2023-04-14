@@ -188,11 +188,10 @@ def initialize_board_Layers(size, P, s1_ratio, s2_ratio, s3_ratio):
     """
     rows, cols = size
     board = np.full(size, -1)
-
+    num_populated_cells = 0
     layer_1_height = int(rows * s1_ratio)
     layer_2_height = int(rows * s2_ratio)
     layer_3_height = int(rows * s3_ratio)
-    layer_4_height = rows - (layer_1_height + layer_2_height + layer_3_height)
 
     for i in range(rows):
         for j in range(cols):
@@ -206,35 +205,43 @@ def initialize_board_Layers(size, P, s1_ratio, s2_ratio, s3_ratio):
                 else:
                     board[i, j] = 4
 
-    return board
+    return board, num_populated_cells
 
 
-def initialize_board_half_half(size, s1_ratio, s2_ratio, s3_ratio):
+def initialize_board_half_half(size, P, s1_ratio, s2_ratio, s3_ratio):
     rows, cols = size
     board = np.full(size, -1)
+
     # Calculate s4_ratio ration.
     s4_ratio = 1 - (s1_ratio + s2_ratio + s3_ratio)
+    num_populated_cells = 0
 
     for i in range(rows):
         for j in range(cols):
-            if i == j:
-                board[i, j] = np.random.choice([1, 2, 3, 4],
-                                               p=[s1_ratio, s2_ratio, s3_ratio, 1 - (s1_ratio + s2_ratio + s3_ratio)])
-            elif i < j:
-                board[i, j] = np.random.choice([1, 2],
-                                               p=[s1_ratio / (s1_ratio + s2_ratio), s2_ratio / (s1_ratio + s2_ratio)])
-            else:
-                board[i, j] = np.random.choice([3, 4],
-                                               p=[s3_ratio / (s3_ratio + s4_ratio), s4_ratio / (s3_ratio + s4_ratio)])
+            if np.random.random() < P:
+                if i == j:
+                    board[i, j] = np.random.choice([1, 2, 3, 4],
+                                                   p=[s1_ratio, s2_ratio, s3_ratio, 1 - (s1_ratio + s2_ratio + s3_ratio)])
+                elif i < j:
+                    board[i, j] = np.random.choice([1, 2],
+                                                   p=[s1_ratio / (s1_ratio + s2_ratio), s2_ratio / (s1_ratio + s2_ratio)])
+                else:
+                    board[i, j] = np.random.choice([3, 4],
+                                                   p=[s3_ratio / (s3_ratio + s4_ratio), s4_ratio / (s3_ratio + s4_ratio)])
 
-    return board
+    for i in range(rows):
+        for j in range(cols):
+            if board[i, j] != -1:
+                num_populated_cells += 1
+
+    return board, num_populated_cells
 
 
-def initialize_board_nested_rectangles(size):
+def initialize_board_nested_rectangles(size, P):
 
     rows, cols = size
     board = np.full(size, -1)
-
+    num_populated_cells = 0
     layer_1_thickness = 20
     layer_2_thickness = 15
     layer_3_thickness = 10
@@ -242,16 +249,23 @@ def initialize_board_nested_rectangles(size):
 
     for i in range(rows):
         for j in range(cols):
-            if i < layer_1_thickness or j < layer_1_thickness or i >= rows - layer_1_thickness or j >= cols - layer_1_thickness:
-                board[i, j] = 4
-            elif i < layer_1_thickness + layer_2_thickness or j < layer_1_thickness + layer_2_thickness or i >= rows - (
-                    layer_1_thickness + layer_2_thickness) or j >= cols - (layer_1_thickness + layer_2_thickness):
-                board[i, j] = 3
-            elif i < layer_1_thickness + layer_2_thickness + layer_3_thickness or j < layer_1_thickness + layer_2_thickness + layer_3_thickness or i >= rows - (
-                    layer_1_thickness + layer_2_thickness + layer_3_thickness) or j >= cols - (
-                    layer_1_thickness + layer_2_thickness + layer_3_thickness):
-                board[i, j] = 2
-            elif i < layer_1_thickness + layer_2_thickness + layer_3_thickness + layer_4_thickness and j < layer_1_thickness + layer_2_thickness + layer_3_thickness + layer_4_thickness:
-                board[i, j] = 1
+            if np.random.random() < P:
+                if i < layer_1_thickness or j < layer_1_thickness or i >= rows - layer_1_thickness or j >= cols - layer_1_thickness:
+                    board[i, j] = 4
+                elif i < layer_1_thickness + layer_2_thickness or j < layer_1_thickness + layer_2_thickness or i >= rows - (
+                        layer_1_thickness + layer_2_thickness) or j >= cols - (layer_1_thickness + layer_2_thickness):
+                    board[i, j] = 3
+                elif i < layer_1_thickness + layer_2_thickness + layer_3_thickness or j < layer_1_thickness + layer_2_thickness + layer_3_thickness or i >= rows - (
+                        layer_1_thickness + layer_2_thickness + layer_3_thickness) or j >= cols - (
+                        layer_1_thickness + layer_2_thickness + layer_3_thickness):
+                    board[i, j] = 2
+                elif i < layer_1_thickness + layer_2_thickness + layer_3_thickness + layer_4_thickness and j < layer_1_thickness + layer_2_thickness + layer_3_thickness + layer_4_thickness:
+                    board[i, j] = 1
 
-    return board
+    for i in range(rows):
+        for j in range(cols):
+            if board[i, j] != -1:
+                num_populated_cells += 1
+
+
+    return board, num_populated_cells
