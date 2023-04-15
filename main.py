@@ -174,8 +174,8 @@ def spread_rumor(board, banned_rumor_spreaders, L, original_doubt_lvl_spreaders,
     total_population = np.sum(new_board != -1)
     exposed_population = np.sum(flags_board)
     exposed_percentages = (exposed_population / total_population) * 100
-
-    return new_board, banned_rumor_spreaders, current_rumor_received, flags_board, exposed_percentages
+    rounded_percentage = round(exposed_percentages, 3)
+    return new_board, banned_rumor_spreaders, current_rumor_received, flags_board, rounded_percentage
 
 
 def initialize_board_Layers(size, P, s1_ratio, s2_ratio, s3_ratio):
@@ -204,6 +204,11 @@ def initialize_board_Layers(size, P, s1_ratio, s2_ratio, s3_ratio):
                     board[i, j] = 3
                 else:
                     board[i, j] = 4
+
+    for i in range(rows):
+        for j in range(cols):
+            if board[i, j] != -1:
+                num_populated_cells += 1
 
     return board, num_populated_cells
 
@@ -242,10 +247,10 @@ def initialize_board_nested_rectangles(size, P):
     rows, cols = size
     board = np.full(size, -1)
     num_populated_cells = 0
-    layer_1_thickness = 20
-    layer_2_thickness = 15
-    layer_3_thickness = 10
-    layer_4_thickness = 10
+    layer_1_thickness = 6
+    layer_2_thickness = 9
+    layer_3_thickness = 11
+    layer_4_thickness = 50
 
     for i in range(rows):
         for j in range(cols):
