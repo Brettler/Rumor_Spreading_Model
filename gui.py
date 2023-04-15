@@ -190,8 +190,7 @@ class SpreadingRumorsGUI(tk.Tk):
            for doubt_level in self.doubt_level_percentages.keys():
                count = np.sum(self.board == doubt_level)
                percentage = (count / total_population) * 100
-               rounded_percentage = round(percentage, 3)
-               self.doubt_level_percentages[doubt_level].append(rounded_percentage)
+               self.doubt_level_percentages[doubt_level].append(percentage)
     ###########################################################################################
     ###########################################################################################
 
@@ -334,6 +333,7 @@ if __name__ == "__main__":
         # Randomly select a person to start spreading the rumor. In order to make sure we select a random person,
         # we made sure to select a populated cell. We will continue to randomly select cells until the
         # cell is != -1 (unpopulated cell).
+
         while True:
             start_row, start_col = np.random.randint(0, size[0]), np.random.randint(0, size[1])
             if board[start_row, start_col] != -1:
