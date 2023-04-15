@@ -79,8 +79,7 @@ def get_neighbors(grid, row, col):
     # Creat a list of potential neighbors indices.
     potential_neighbors = [top_neighbor, top_right_neighbor, right_neighbor, bottom_right_neighbor, bottom_neighbor,
                            bottom_left_neighbor, left_neighbor, top_left_neighbor]
-    ######################## need to do special mode for question B if needed ######################
-    #potential_neighbors = [top_neighbor, right_neighbor, bottom_neighbor, left_neighbor]
+
     # Create a list to store all the valid neighbors indices.
     valid_neighbors = []
 
@@ -155,26 +154,37 @@ def spread_rumor(board, banned_rumor_spreaders, L, original_doubt_lvl_spreaders,
         # Store the probability of the cell to spread the rumor he received.
         probability = probabilities[doubt_level]
 
+        # Retrive the neighbors of the corrent cell
         neighbors = get_neighbors(original_doubt_lvl_spreaders, row, col)
 
-        counter_rumors_expose = 0
         for r, c in neighbors:
+            # Check if the neighbor spread so we wont spread the rumor again to him (our rule we enforce here)
+            # Also check if the cell we are looking is populated.
             if original_doubt_lvl_spreaders[r, c] == -1 or (r, c) in banned_rumor_spreaders:
                 continue
             else:
-
+                # We randomly choose a number between 0 and 1. if this number is lower than the
+                # probability of the cell to believe a rumor, the cell will spread the rumor to the valid neighbor
                 if np.random.random() < probability:
-                    counter_rumors_expose += 1
+                    # Change the neighbor cell to true (for being active cell that is going to spread rumor)
                     flags_board[r, c] = True
+                    # Change the state of the cell that currently spread the rumor to his neighbor
                     new_board[row, col] = 5
+                    # Increment the counter of the neighbor to keep track how many people spread him the rumor.
+                    # So in the next generation when it is his turn to spread the rumor he will know from how many
+                    # cells we recived the rumor
                     current_rumor_received[r, c] += 1
-
+                    # Add the current spreading rumor cell to the banned list of spreading rumor.
                     banned_rumor_spreaders[(row, col)] = 0
-
+    # Retrieve number of cells that are populated.
     total_population = np.sum(new_board != -1)
+    # Cells who receive the rumor their state will be true
     exposed_population = np.sum(flags_board)
+    # Calculate exposed_population in percentages.
     exposed_percentages = (exposed_population / total_population) * 100
+    # Round the number to three points after the dot.
     rounded_percentage = round(exposed_percentages, 3)
+
     return new_board, banned_rumor_spreaders, current_rumor_received, flags_board, rounded_percentage
 
 
@@ -186,25 +196,34 @@ def initialize_board_Layers(size, P, s1_ratio, s2_ratio, s3_ratio):
       :param s3_ratio: The proportion of the third rectangle for people who will believe a rumor with a 1/3 probability
       :return: Initialized board will each cell with state of level of doubt.
     """
-    rows, cols = size
-    board = np.full(size, -1)
-    num_populated_cells = 0
+    rows, cols = size  # Unpack the dimensions of the grid.
+    board = np.full(size, -1)  # Initialize an empty board with -1 in all cells.
+    # Define the layer doubt of level height by the ratio of each doubt of level
     layer_1_height = int(rows * s1_ratio)
     layer_2_height = int(rows * s2_ratio)
     layer_3_height = int(rows * s3_ratio)
 
+    # Nested loop iterate over all the board
     for i in range(rows):
         for j in range(cols):
+            # We randomly choose a number between 0 and 1. if this number is lower then P the porbability the cell
+            # is populated, we will populate the cell!
             if np.random.random() < P:
+                # Populated the first layer of doubt of level 1 until getting to the point that layer 2 need to start
                 if i < layer_1_height:
                     board[i, j] = 1
+                # Populated the cells with doubt of levl 2 until the point that level 3 height starts
                 elif i < layer_1_height + layer_2_height:
                     board[i, j] = 2
+                # Populated the cells with doubt of levl 2 until the point that level 4 height starts
                 elif i < layer_1_height + layer_2_height + layer_3_height:
                     board[i, j] = 3
+                # Rest of the board are doubt level 4.
                 else:
                     board[i, j] = 4
 
+    # Calculate the number of cells that are populated, needed to be all cells that their state are not equal to -1.
+    num_populated_cells = 0
     for i in range(rows):
         for j in range(cols):
             if board[i, j] != -1:
@@ -214,26 +233,42 @@ def initialize_board_Layers(size, P, s1_ratio, s2_ratio, s3_ratio):
 
 
 def initialize_board_half_half(size, P, s1_ratio, s2_ratio, s3_ratio):
-    rows, cols = size
-    board = np.full(size, -1)
+    """
+    :param size: This value sets the height and width of the grid.
+    :param P: The overall density of the population.
+    :param s1_ratio: The proportion of people who will believe every rumor they hear.
+    :param s2_ratio: The proportion of people who will believe a rumor with a 2/3 probability.
+    :param s3_ratio: The proportion of people who will believe a rumor with a 1/3 probability.
+    :return: Initialized board with each cell's level of doubt.
+            Also return the number of cells that are populated.
+    """
+    rows, cols = size  # Unpack the dimensions of the grid.
+    board = np.full(size, -1)  # Initialize an empty board with -1 in all cells.
 
     # Calculate s4_ratio ration.
     s4_ratio = 1 - (s1_ratio + s2_ratio + s3_ratio)
-    num_populated_cells = 0
 
     for i in range(rows):
         for j in range(cols):
+            # We randomly choose a number between 0 and 1. if this number is lower then P the porbability the cell
+            # is populated, we will populated the cell!
             if np.random.random() < P:
+                # Populated the main diagnal with mix level of doubt.
+                # each level of doubt can be selected depended on the ratio of the parameters
                 if i == j:
                     board[i, j] = np.random.choice([1, 2, 3, 4],
-                                                   p=[s1_ratio, s2_ratio, s3_ratio, 1 - (s1_ratio + s2_ratio + s3_ratio)])
+                                                   p=[s1_ratio, s2_ratio, s3_ratio, s4_ratio])
+                # Populated the upper triangle with level of doubt s1 / s2 depended on their ratio
                 elif i < j:
                     board[i, j] = np.random.choice([1, 2],
                                                    p=[s1_ratio / (s1_ratio + s2_ratio), s2_ratio / (s1_ratio + s2_ratio)])
+                # Populated the bottom triangle with level of doubt s3 / s4 depended on their ratio
                 else:
                     board[i, j] = np.random.choice([3, 4],
                                                    p=[s3_ratio / (s3_ratio + s4_ratio), s4_ratio / (s3_ratio + s4_ratio)])
 
+    # Calculate the number of cells that are populated, needed to be all cells that their state are not equal to -1.
+    num_populated_cells = 0
     for i in range(rows):
         for j in range(cols):
             if board[i, j] != -1:
@@ -243,34 +278,47 @@ def initialize_board_half_half(size, P, s1_ratio, s2_ratio, s3_ratio):
 
 
 def initialize_board_nested_rectangles(size, P):
-
-    rows, cols = size
-    board = np.full(size, -1)
-    num_populated_cells = 0
+    """
+    :param size: This value sets the height and width of the grid.
+    :param P: The overall density of the population.
+    :return: Initialized board with each cell's level of doubt.
+            Also return the number of cells that are populated.
+    """
+    rows, cols = size  # Unpack the dimensions of the grid.
+    board = np.full(size, -1)  # Initialize an empty board with -1 in all cells.
+    # Define the number size of reach rectangle
     layer_1_thickness = 6
     layer_2_thickness = 9
     layer_3_thickness = 11
     layer_4_thickness = 50
 
+    # Nested loop going over each cell in the board.
     for i in range(rows):
         for j in range(cols):
+            # We randomly choose a number between 0 and 1. if this number is lower then P the porbability the cell
+            # is populated, we will populated the cell!
             if np.random.random() < P:
+                # Define the cells in the outer layer (RED)
                 if i < layer_1_thickness or j < layer_1_thickness or i >= rows - layer_1_thickness or j >= cols - layer_1_thickness:
                     board[i, j] = 4
+                # Define the cells in the layer doubt of level 3 (ORANGE)
                 elif i < layer_1_thickness + layer_2_thickness or j < layer_1_thickness + layer_2_thickness or i >= rows - (
                         layer_1_thickness + layer_2_thickness) or j >= cols - (layer_1_thickness + layer_2_thickness):
                     board[i, j] = 3
+                # Define the cells in the layer doubt of level 2 (GREEN)
                 elif i < layer_1_thickness + layer_2_thickness + layer_3_thickness or j < layer_1_thickness + layer_2_thickness + layer_3_thickness or i >= rows - (
                         layer_1_thickness + layer_2_thickness + layer_3_thickness) or j >= cols - (
                         layer_1_thickness + layer_2_thickness + layer_3_thickness):
                     board[i, j] = 2
+                # Define the cells in the inner layer (BLUE)
                 elif i < layer_1_thickness + layer_2_thickness + layer_3_thickness + layer_4_thickness and j < layer_1_thickness + layer_2_thickness + layer_3_thickness + layer_4_thickness:
                     board[i, j] = 1
 
+    # Calculate the number of cells that are populated, needed to be all cells that their state are not equal to -1.
+    num_populated_cells = 0
     for i in range(rows):
         for j in range(cols):
             if board[i, j] != -1:
                 num_populated_cells += 1
-
 
     return board, num_populated_cells

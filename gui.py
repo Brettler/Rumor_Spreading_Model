@@ -2,8 +2,8 @@ import tkinter as tk
 from main import spread_rumor
 import numpy as np
 from tkinter import simpledialog, messagebox
-import matplotlib.pyplot as plt
 import main as m
+# import matplotlib.pyplot as plt
 
 
 class SpreadingRumorsGUI(tk.Tk):
@@ -112,7 +112,7 @@ class SpreadingRumorsGUI(tk.Tk):
         # Run the model the number of generations the user provided recursively:
         if self.current_iteration < self.num_generations:
             # Calculate the percentage of each level of doubt during each iteration for report.
-            self.calculate_doubt_level_percentages()
+            #self.calculate_doubt_level_percentages()
             # Method from tkinter package, updates the canvas after 100 milliseconds.
             # This way the visualization is more responsive and understandable when passing generations.
             self.after(200, self.update_canvas)
@@ -135,8 +135,10 @@ class SpreadingRumorsGUI(tk.Tk):
             self.results["Percentage of people who never received the rumor"] = rounded_percentage
 
             # Methods for generating plots:
+            """
             self.plot_exposed_population_percentages()
             self.plot_doubt_level_percentages()
+            """
             # Display the results in a new dialog window:
             over = tk.Tk()
             over.withdraw()
@@ -150,7 +152,7 @@ class SpreadingRumorsGUI(tk.Tk):
     """
     ###########################################################################################
     ###########################################################################################
-
+    """
     def plot_exposed_population_percentages(self):
 
         iterations = range(len(self.exposed_population_percentages))
@@ -184,6 +186,7 @@ class SpreadingRumorsGUI(tk.Tk):
         plt.legend(loc="best")
         plt.savefig("Doubt_Level_Percentages_Over_Time.png", dpi=600)
         plt.show()
+        
 
     def calculate_doubt_level_percentages(self):
            total_population = np.sum(self.board != -1)
@@ -191,6 +194,7 @@ class SpreadingRumorsGUI(tk.Tk):
                count = np.sum(self.board == doubt_level)
                percentage = (count / total_population) * 100
                self.doubt_level_percentages[doubt_level].append(percentage)
+    """
     ###########################################################################################
     ###########################################################################################
 
@@ -324,6 +328,12 @@ if __name__ == "__main__":
     start_col = 50
     board = None
     num_populated_cells = 0
+    sum_ratio = s1_ratio + s2_ratio + s3_ratio
+
+    if sum_ratio > 1 or s1_ratio < 0 or s2_ratio < 0 or s3_ratio < 0:
+        messagebox.showwarning("Warning", "Please Run The Program Again. Sum of Ratios MUST be <= 1")
+        exit(1)
+
 
     # Initialize the board chosen by the user with the values of his choice.
     if board_choice == "Classic-Random":
