@@ -2,19 +2,18 @@ import tkinter as tk
 from main import spread_rumor
 import numpy as np
 from tkinter import simpledialog, messagebox
-# Using to draw the plots.
-import matplotlib.pyplot as plt
 import main as m
+# import matplotlib.pyplot as plt
 
 
 class SpreadingRumorsGUI(tk.Tk):
     """
-    The class inherits from tk.TK class. It will provide us method to generate interface for the user and visualize
-    the spreading rumor model.
+    This class inherits from the 'tk.TK' class, which provides a method to generate an interface for the user,
+     and visualizes the spreading rumor model.
     """
     def __init__(self, board, banned_rumor_spreaders, L, original_doubt_lvl_spreaders,
                  rumor_received, flags_board, manual_simulation, num_generations, num_populated_cells,
-                 exposed_precentages = 0, cell_size=10):
+                 exposed_precentages = 0, cell_size=7):
         # Calling the parent constructor to generate the main windows for display.
         super().__init__()
         self.title("Spreading Rumors Model")
@@ -28,48 +27,41 @@ class SpreadingRumorsGUI(tk.Tk):
         self.flags_board = flags_board
         self.manual_simulation = manual_simulation
         self.num_generations = num_generations
-        # Variables to generate graph for analyze:
-        self.exposed_percentages = exposed_precentages
-        # Generate a list that will sore the percentages of population that expose to a rumor in each iteration.
-        self.exposed_population_percentages = []
+        self.exposed_percentages = exposed_precentages  # Stores the current percentage of the exposed population.
+        self.exposed_population_percentages = []    # List of the percentage of the population that's been exposed.
         self.num_populated_cells = num_populated_cells
-        # Generate a dictionary that wil store the percentages of each level of doubt.
-        self.doubt_level_percentages = {
+        self.doubt_level_percentages = {    # Dictionary of level doubt percentages.
             1: [],
             2: [],
             3: [],
             4: [],
             5: []
         }
-        # Initialize the current iteration
-        self.current_iteration = 0
-        # The results will keep update as the game progress
-        self.results = {
-            "Number of cells with population:": num_populated_cells,
+        self.current_iteration = 0  # Initialize the current iteration
+        self.results = {    # Results are updated as the simulation progresses.
+            "Number of populated cells:": num_populated_cells,
             "Number of generations that passed:": num_generations
         }
-        # Create a label to display the current iteration
-        self.iteration_label = tk.Label(self, text=f"Iteration: {self.current_iteration}")
+        self.iteration_label = tk.Label(self, text=f"Iteration: {self.current_iteration}")  # Display current iteration.
         self.iteration_label.pack()
-        # Method from tkinter package, will generate the grid.
-        # This method receive number of pixel, so we need to take the dim of the grid we want (100*100 in our case)
-        # and multiply it by the size of cell. This way the pixels of the cells taking into account also.
+        # Method from the tkinter package, will generate the grid.
+        # This method receives a number of pixels, so we give the dimensions of the grid we want (100*100 in our case),
+        # and multiply it by the size of cell. This way the pixels of the cells are taken into account.
         self.canvas = tk.Canvas(self, width=board.shape[1] * cell_size, height=board.shape[0] * cell_size)
-        # visualize the grid in the main window.
-        self.canvas.pack()
+        self.canvas.pack()  # visualize the grid in the main window.
 
-        # Checking if the user decide to run the simulation automatically or manually
+        # Checks if the user decided to run the simulation automatically or manually:
         if self.manual_simulation:
-            # The simulation run manually will need a button that each time it pressed it the pass generation.
+            # The manual simulation requires a button to progress the generations.
             self.advance_button = tk.Button(self, text="Advance One Generation", command=self.advance_one_generation)
             self.advance_button.pack()
             self.draw_board()
         else:
-            # will keep the visualize updating in each generation.
+            # Updates the visualization with each iteration.
             self.update_canvas()
 
     def draw_board(self):
-        # Clear the board (from all the states = colors), so we can visualize the next generation.
+        # Clear the board from all the states (= colors), so we can visualize the next generation.
         self.canvas.delete("all")
         # Generate dictionary so each level of doubt will correspond to a color.
         # 4 - not believe,
@@ -78,19 +70,18 @@ class SpreadingRumorsGUI(tk.Tk):
         # 1 - believe in everything.
         colors = {-1: "white", 1: "blue", 2: "green", 3: "orange", 4: "red", 5: "pink"}
 
-        # Nested loop iterating on each cell in the grid.
+        # Nested loop iterating over each cell in the grid:
         for row in range(self.board.shape[0]):
             for col in range(self.board.shape[1]):
-                # Mapping the level of doubt to the corresponding color.
-                color = colors[self.board[row, col]]
-                # Calculate the pixels position of the current cell.
+                color = colors[self.board[row, col]]    # Mapping the level of doubt to the corresponding color.
+                # Calculate the pixels positions for the current cell.
                 # top-left coordinates:
                 left = col * self.cell_size
                 top = row * self.cell_size
                 # bottom-right coordinates:
                 right = (col + 1) * self.cell_size
                 bottom = (row + 1) * self.cell_size
-                # Calling the method with the arguments above provided by tkinter.
+                # Calling the method with the arguments above provided by tkinter:
                 self.canvas.create_rectangle(left, top, right, bottom, fill=color)
 
     def advance_one_generation(self):
@@ -99,7 +90,7 @@ class SpreadingRumorsGUI(tk.Tk):
             self.exposed_percentages = spread_rumor(self.board, self.banned_rumor_spreaders, self.L,
                                                     self.original_doubt_lvl_spreaders, self.rumor_received,
                                                     self.flags_board)
-        # Increment the iteration number and update the label
+        # Increment the iteration number and update the label.
         self.current_iteration += 1
         self.iteration_label.config(text=f"Iteration: {self.current_iteration}")
         # Draw the board of the next generation.
@@ -107,29 +98,28 @@ class SpreadingRumorsGUI(tk.Tk):
 
     def update_canvas(self):
         self.draw_board()
-        # Calling the method spread_rumor to update the board and
-        # the rumor_spreaders (cells who are not allow to spread rumor for L generation).
+        # Calling the method spread_rumor to update the board and the rumor_spreaders
+        # (cells who are not allowed to spread a rumor for L generations).
         self.board, self.banned_rumor_spreaders, self.rumor_received, self.flags_board, self.exposed_percentages\
             = spread_rumor(self.board, self.banned_rumor_spreaders, self.L, self.original_doubt_lvl_spreaders,
                            self.rumor_received, self.flags_board)
-        # Store the percentage of population that expose to a rumor in a current generation.
+        # Store the percentage of the population that was exposed to a rumor in the current generation.
         self.exposed_population_percentages.append(self.exposed_percentages)
-        # Increment the iteration number and update the label
+        # Increment the iteration number and update the label.
         self.current_iteration += 1
         self.iteration_label.config(text=f"Iteration: {self.current_iteration}")
-        # Running the simulation until 100 iteration:
 
+        # Run the model the number of generations the user provided recursively:
         if self.current_iteration < self.num_generations:
-            # Calculate the percentage of each doubt of level for each iteration to make meaningful
-            # figures to our report.
-            self.calculate_doubt_level_percentages()
-            # Method from tkinter package, updating the canvas after 100 milliseconds. This way we make more
-            # responsive and understandable visualization when passing generations.
+            # Calculate the percentage of each level of doubt during each iteration for report.
+            #self.calculate_doubt_level_percentages()
+            # Method from tkinter package, updates the canvas after 100 milliseconds.
+            # This way the visualization is more responsive and understandable when passing generations.
             self.after(200, self.update_canvas)
 
-        # Finished running the simulation and its time for results:
+        # Finished running the simulation, time to get results:
         if int(self.current_iteration) == int(self.num_generations):
-            # Calcualte the number of cells that exposed to a rumor (all cells that are true exposed)
+            # Calculate the number of cells that were exposed to a rumor (all cells that are 'true').
             exposed_population = np.sum(self.flags_board)
             self.results["Number of people who received the rumor"] = exposed_population
             self.results["Percentage of people who received the rumor:"] = self.exposed_percentages
@@ -143,25 +133,26 @@ class SpreadingRumorsGUI(tk.Tk):
             never_exposed_percentages = (never_exposed / num_populated_cells) * 100
             rounded_percentage = round(never_exposed_percentages, 3)
             self.results["Percentage of people who never received the rumor"] = rounded_percentage
-            # Calling the methods to generate the plot needed for our report:
+
+            # Methods for generating plots:
+            """
             self.plot_exposed_population_percentages()
             self.plot_doubt_level_percentages()
-            # Display the results in a new dialog window
+            """
+            # Display the results in a new dialog window:
             over = tk.Tk()
             over.withdraw()
             results_window = ResultsWindow(over, self.results)
             results_window.grab_set()
 
 
-
-
     """
-    Those methods helped us generated the plots needed for our report,
-    we kept them in our code if needed to show how the polts made:
+    These methods helped us generate the plots needed for our report,
+    we kept them in our code if needed to show how the plots were made:
     """
     ###########################################################################################
     ###########################################################################################
-
+    """
     def plot_exposed_population_percentages(self):
 
         iterations = range(len(self.exposed_population_percentages))
@@ -176,7 +167,6 @@ class SpreadingRumorsGUI(tk.Tk):
     def plot_doubt_level_percentages(self):
 
         iterations = range(len(self.doubt_level_percentages[1]))
-
         colors = {1: "blue", 2: "green", 3: "orange", 4: "red", 5: "pink"}
         labels = {
             1: "S1 - Believe everything",
@@ -195,71 +185,62 @@ class SpreadingRumorsGUI(tk.Tk):
         plt.title("Doubt Level Percentages Over Time")
         plt.legend(loc="best")
         plt.savefig("Doubt_Level_Percentages_Over_Time.png", dpi=600)
-
         plt.show()
+        
 
     def calculate_doubt_level_percentages(self):
-        total_population = np.sum(self.board != -1)
-        for doubt_level in self.doubt_level_percentages.keys():
-            count = np.sum(self.board == doubt_level)
-            percentage = (count / total_population) * 100
-            rounded_percentage = round(percentage, 3)
-            self.doubt_level_percentages[doubt_level].append(rounded_percentage)
+           total_population = np.sum(self.board != -1)
+           for doubt_level in self.doubt_level_percentages.keys():
+               count = np.sum(self.board == doubt_level)
+               percentage = (count / total_population) * 100
+               self.doubt_level_percentages[doubt_level].append(percentage)
+    """
     ###########################################################################################
     ###########################################################################################
 
 
 class InitialParametersWindow(simpledialog.Dialog):
     """
-    The class inherits from simpledialog.Dialog class. It will provide us method to generate interface for the user to
-    set the parameters of the model.
+    This class inherits from the 'simpledialog.Dialog' class. It provides us with a method that generates an interface
+    for the user, so he/she can set the parameters of the model.
     """
     def __init__(self, parent):
-        # Set the variable parameters, we will store later the setting of the user choose.
+        # Set the variable parameters. We will store the setting the user chose later.
         self.parameters = None
         super().__init__(parent)
-
-
 
     def body(self, feature):
         """
         :param feature: Using the parent class to make different features.
-        :return: Create the content of the custom dialog window
+        :return: Create the content of the custom dialog window.
         """
 
-        # Set title for the dialog window
+        # Set title of the dialog window:
         message1 = "Please enter the parameters for the simulation:"
         message2 = "(Note: The ratio for S4 will be the remaining population," \
                    " Sum of ratio must be equal or less than 1)"
         tk.Label(feature, text=message1).grid(row=0, column=0, columnspan=2)
         tk.Label(feature, text=message2).grid(row=1, column=0, columnspan=2)
 
-        # Set label for each feature in the dialog window
-        tk.Label(feature, text="Board size (This value sets the height and width of the grid):").grid(row=2)
-        tk.Label(feature, text="S1 ratio (The proportion of people who will believe every rumor they hear):").grid(row=3)
-        tk.Label(feature, text="S2 ratio (The proportion of people who will believe a rumor with a 2/3 probability):").grid(row=4)
-        tk.Label(feature, text="S3 ratio (The proportion of people who will believe a rumor with a 1/3 probability):").grid(row=5)
-        tk.Label(feature, text="L (The number of generations a person must wait before spreading a rumor again)").grid(row=6)
-        tk.Label(feature, text="P (The overall density of the population):").grid(row=7)
+        # Set a label for each feature in the dialog window:
+        tk.Label(feature, text="Board size:").grid(row=2)
+        tk.Label(feature, text="S1 ratio - believe every rumor:").grid(row=3)
+        tk.Label(feature, text="S2 ratio - believe a rumor with a 2/3 probability:").grid(row=4)
+        tk.Label(feature, text="S3 ratio - believe a rumor with a 1/3 probability:").grid(row=5)
+        tk.Label(feature, text="L - The number of generations to wait before spreading a rumor again").grid(row=6)
+        tk.Label(feature, text="P - population density:").grid(row=7)
         tk.Label(feature, text="Number of generations:").grid(row=8)
 
-        # Create 6 features, each corresponding to a parameter that the user will choose.
-        # Size
-        self.f1 = tk.Entry(feature)
-        # S1 ratio
-        self.f2 = tk.Entry(feature)
-        # S2 Ratio
-        self.f3 = tk.Entry(feature)
-        # S3 Ratio
-        self.f4 = tk.Entry(feature)
-        # L
-        self.f5 = tk.Entry(feature)
-        # P
-        self.f6 = tk.Entry(feature)
-        # Generation
-        self.f7 = tk.Entry(feature)
+        # Create six features, each corresponding to a parameter that the user will choose:
+        self.f1 = tk.Entry(feature)     # Size
+        self.f2 = tk.Entry(feature)     # S1 ratio
+        self.f3 = tk.Entry(feature)     # S2 Ratio
+        self.f4 = tk.Entry(feature)     # S3 Ratio
+        self.f5 = tk.Entry(feature)     # L
+        self.f6 = tk.Entry(feature)     # P
+        self.f7 = tk.Entry(feature)     # Generation
 
-        # Choose the position of each feature in the dialog window.
+        # Choose the position of each feature in the dialog window:
         self.f1.grid(row=2, column=1)
         self.f2.grid(row=3, column=1)
         self.f3.grid(row=4, column=1)
@@ -268,8 +249,7 @@ class InitialParametersWindow(simpledialog.Dialog):
         self.f6.grid(row=7, column=1)
         self.f7.grid(row=8, column=1)
 
-
-        # Set default values
+        # Set default values:
         self.f1.insert(0, "100")
         self.f2.insert(0, "0.25")
         self.f3.insert(0, "0.25")
@@ -278,22 +258,20 @@ class InitialParametersWindow(simpledialog.Dialog):
         self.f6.insert(0, "0.6")
         self.f7.insert(0, "100")
 
-
         tk.Label(feature, text="Select the initial grid mode:").grid(row=9)
-        # Create dropdown menu to select the board
+        # Create a dropdown menu to select the type of board:
         self.board_var = tk.StringVar(feature)
-        # If the user don't change the bard setting, it will be set as default.
+        # If the user doesn't change the board settings, they will be set to default.
         self.board_var.set("Classic-Random")
-        # Boards that the user can choose between them. (3 costume boards for question B)
+        # Types of boards the user can pick from.   (Three custom boards for part B)
         boards = ["Classic-Random", "Layers", "Half&Half", "Nested Rectangles"]
         self.board_dropdown = tk.OptionMenu(feature, self.board_var, *boards)
         # Location in the window dialog where the selection will be.
         self.board_dropdown.grid(row=9, column=1)
 
-
-        # Create boolean variable to store the decision of the checkbox (Selected will be true, else false).
+        # Create boolean variable to store the decision of the checkbox (Selected will be true, otherwise false).
         self.manual_simulation_bool = tk.BooleanVar()
-        # Creat the button in the dialog window using the father class and link the button to the variable we created.
+        # Create a button in the dialog window using the father class and link the button to the variable we created.
         self.manual_simulation_checkbox = tk.Checkbutton(feature, text="Manual Simulation",
                                                          variable=self.manual_simulation_bool)
         # Set the position of the checkbox.
@@ -301,7 +279,7 @@ class InitialParametersWindow(simpledialog.Dialog):
 
     def apply(self):
         """
-        :return: Initialized The parameters of the simulation with the user choice.
+        :return: Initialize The parameters of the simulation with the user choices.
         """
         size = int(self.f1.get())
         s1_ratio = float(self.f2.get())
@@ -335,12 +313,8 @@ class ResultsWindow(tk.Toplevel):
         tk.Button(self, text="OK", command=self.destroy).grid(row=pos, columnspan=2)
 
 
-
-
-
-
 if __name__ == "__main__":
-    # Generate object from the class we inherence.
+    # Generate object from the class we inherited.
     root = tk.Tk()
     root.withdraw()
     initial_parameters_window = InitialParametersWindow(root)
@@ -348,64 +322,78 @@ if __name__ == "__main__":
     # Store the parameters selected by the user or the default parameters into variables.
     size, s1_ratio, s2_ratio, s3_ratio, L, P, manual_simulation, board_choice, num_generations =\
         initial_parameters_window.parameters
-    # Generate the size of the board (Height, Width)
+    # Generate the size of the board (Height, Width).
     size = (size, size)
-    start_row = None
-    start_col = None
+    start_row = 50
+    start_col = 50
     board = None
     num_populated_cells = 0
+    sum_ratio = s1_ratio + s2_ratio + s3_ratio
 
-    # Initialized the board chosen by the user with the parameters of his chosen.
+    if sum_ratio > 1 or s1_ratio < 0 or s2_ratio < 0 or s3_ratio < 0:
+        messagebox.showwarning("Warning", "Please Run The Program Again. Sum of Ratios MUST be <= 1")
+        exit(1)
+
+
+    # Initialize the board chosen by the user with the values of his choice.
     if board_choice == "Classic-Random":
-        # Initialize board for classic mode. as requested in question A.
+        # Initialize board to classic mode, as requested in part A.
         board, num_populated_cells = m.initialize_board(size, P, s1_ratio, s2_ratio, s3_ratio)
 
-        # Randomly select a person to start spreading the rumor. In order to make sure we select a random person
-        # meaning we need to make sure we select populate cell. we will keep try to randomly select
-        # cells until the cell is != -1 (unpopulated cell)
+        # Randomly select a person to start spreading the rumor. In order to make sure we select a random person,
+        # we made sure to select a populated cell. We will continue to randomly select cells until the
+        # cell is != -1 (unpopulated cell).
+
         while True:
             start_row, start_col = np.random.randint(0, size[0]), np.random.randint(0, size[1])
             if board[start_row, start_col] != -1:
                 break
 
-    else:
-        start_row = 50
-        start_col = 50
-    # Rest of the boards will be deterministic and will answer question B.
+    # Rest of the boards will be deterministic and will answer part B.
     if board_choice == "Layers":
-        # In this board we split the board to 4 parts, each part will be fill with different level of doubt.
-        board = m.initialize_board_Layers(size, P, s1_ratio, s2_ratio, s3_ratio)
+        # We split this board into four parts, each will be filled with different levels of doubt.
+        board, num_populated_cells = m.initialize_board_Layers(size, P, s1_ratio, s2_ratio, s3_ratio)
     elif board_choice == "Half&Half":
-        # This board will be split to
-        board = m.initialize_board_half_half(size, s1_ratio, s2_ratio, s3_ratio)
+        # This board will be split in two.
+        board, num_populated_cells = m.initialize_board_half_half(size, P, s1_ratio, s2_ratio, s3_ratio)
     elif board_choice == "Nested Rectangles":
-        # Initialize board for Board 3
-        board = m.initialize_board_nested_rectangles(size)
+        # Initialize board for Board 3.
+        board, num_populated_cells = m.initialize_board_nested_rectangles(size, P)
 
-    # Check if the selected cell has a level of doubt of 4
+    while True:
+        if board[start_row, start_col] != -1:
+            break
+        else:
+            neighbors_list = m.get_neighbors(board, start_row, start_col)
+            for r, c in neighbors_list:
+                start_row = r
+                start_col = c
+                if board[start_row, start_col] != -1:
+                    break
+
+    # Check if the selected cell has a level of doubt of four.
     if board[start_row, start_col] == 4:
         messagebox.showwarning("Warning", "Oh no! a level S4 square has been selected! The rumor will not spread!")
 
-    # Initialized empty dictionary in the size of the board. When we select the random cell to start the rumor we will
-    # select this cell in the 'banned_rumor_spreaders' to track how
-    # many generation he needs to wait until spread a rumor again (L generations).
+    # Initialize empty dictionary in the size of the board. When we select a random cell to start the rumor, we will
+    # add it to the 'banned_rumor_spreaders' so we can track how many generation it needs to wait until it can
+    # spread a rumor again (L generations).
     rumor_spreaders = {}
-    # Create new matrix that will track for each generation how many rumors he received.
+    # Create a new matrix to track for each generation how many rumors were received.
     rumor_received = np.zeros(board.shape)
-    # Create a new board with boolean flags, initialized with False values.
-    # This matrix will flag to us if a cell is active and can spread rumor.
+    # Create a new board of boolean flags, initialized with False values.
+    # This matrix will flag to us if a cell is active and can spread rumor or not.
     flags_board = np.full(size, False, dtype=bool)
 
-    # Selected cell that start spreaing the rumor will be true
+    # Select a cell to start spreading the rumor and set it to 'true'.
     flags_board[start_row, start_col] = True
-    # Store the original board into a new variable to always remember the innate state of each cell
+    # Store the original board into a new variable to always remember the innate state of each cell.
     original_doubt_lvl_spreaders = np.copy(board)
     print(f"Chosen type of cell that start rumor: {board[start_row, start_col]}")
+    print(f"Coordinates: {start_row}, {start_col}")
 
-    # Creat an object of gui with the initialized parameters.
+    # Create a GUI object with the initialized parameters.
     GUI = SpreadingRumorsGUI(board, rumor_spreaders, L, original_doubt_lvl_spreaders, rumor_received, flags_board,
                              manual_simulation, num_generations, num_populated_cells)
-    # Keep the gui running until the user close the window.
+    # Keep the GUI running until the user closes the window.
     GUI.mainloop()
-
-
